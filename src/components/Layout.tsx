@@ -16,6 +16,7 @@ export const Layout = () => {
       </main>
       <Footer />
       <FloatingSelectorButton />
+      <FloatingBackToSiteButton />
     </div>
   );
 };
