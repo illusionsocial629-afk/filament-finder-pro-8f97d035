@@ -1,13 +1,13 @@
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 
-const NOTIFY_TO = Deno.env.get("CONTACT_NOTIFY_TO") ?? "";
+const NOTIFY_TO = Deno.env.get("CONTACT_NOTIFY_TO") ?? "amorphousindia1@gmail.com";
 const SENDER_DOMAIN = Deno.env.get("SENDER_DOMAIN") ?? "";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
     const body = await req.json();
-    const { name, email, message, selected_filament, use_case } = body ?? {};
+    const { name, email, message, selected_filament, use_case, file_url } = body ?? {};
 
     if (!name || !email || !message) {
       return new Response(JSON.stringify({ error: "Missing fields" }), {
@@ -36,6 +36,7 @@ Deno.serve(async (req) => {
       ${selected_filament ? `<p>Material: <strong>${selected_filament}</strong></p>` : ""}
       ${use_case ? `<p>Use case: ${use_case}</p>` : ""}
       <p style="white-space:pre-wrap">${message}</p>
+      ${file_url ? `<p>Attached file: <a href="${file_url}">${file_url}</a></p>` : ""}
     `;
 
     const res = await fetch(callbackUrl, {
