@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { CheckCircle2, MessageCircle } from "lucide-react";
+import { CheckCircle2, MessageCircle, Upload, X, FileIcon } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { FILAMENTS } from "@/lib/filaments";
 
@@ -18,6 +18,22 @@ const schema = z.object({
   selected_filament: z.string().max(50).optional(),
   use_case: z.string().max(80).optional(),
 });
+
+const ALLOWED_EXTENSIONS = [
+  "pdf", "jpg", "jpeg", "png", "doc", "docx", "zip", "rar",
+  "stl", "obj", "3mf", "amf",
+  "step", "stp", "iges", "igs",
+  "x_t", "x_b", "sat",
+  "sldprt", "sldasm",
+  "ipt", "f3d",
+  "catpart", "catproduct",
+  "dwg", "dxf",
+  "ply", "glb", "gltf", "fbx",
+];
+const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
+
+const getExt = (name: string) => name.split(".").pop()?.toLowerCase() ?? "";
+const formatBytes = (b: number) => b < 1024 * 1024 ? `${(b / 1024).toFixed(1)} KB` : `${(b / 1024 / 1024).toFixed(2)} MB`;
 
 const Contact = () => {
   const [params] = useSearchParams();
@@ -31,8 +47,31 @@ const Contact = () => {
   });
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { document.title = "Contact — Filora"; }, []);
+
+  const validateFile = (f: File): string | null => {
+    const ext = getExt(f.name);
+    if (!ALLOWED_EXTENSIONS.includes(ext)) return `Unsupported file type: .${ext}`;
+    if (f.size > MAX_FILE_SIZE) return `File too large (max 15MB). Selected: ${formatBytes(f.size)}`;
+    return null;
+  };
+
+  const handleFile = (f: File | null) => {
+    if (!f) return;
+    const err = validateFile(f);
+    if (err) { toast.error(err); return; }
+    setFile(f);
+  };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    handleFile(e.dataTransfer.files?.[0] ?? null);
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,24 +81,43 @@ const Contact = () => {
       return;
     }
     setBusy(true);
-    const { error } = await supabase.from("contact_submissions").insert({
-      name: parsed.data.name,
-      email: parsed.data.email,
-      message: parsed.data.message,
-      selected_filament: parsed.data.selected_filament || null,
-      use_case: parsed.data.use_case || null,
-      source: presetMaterial ? "selector" : "contact_page",
-    });
-    if (error) {
-      toast.error(error.message);
+
+    let file_url: string | null = null;
+    try {
+      if (file) {
+        const ext = getExt(file.name);
+        const path = `${crypto.randomUUID()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("project-files")
+          .upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
+        if (upErr) throw new Error(`Upload failed: ${upErr.message}`);
+        const { data: pub } = supabase.storage.from("project-files").getPublicUrl(path);
+        file_url = pub.publicUrl;
+      }
+
+      const insertPayload = {
+        name: parsed.data.name,
+        email: parsed.data.email,
+        message: parsed.data.message,
+        selected_filament: parsed.data.selected_filament || null,
+        use_case: parsed.data.use_case || null,
+        source: presetMaterial ? "selector" : "contact_page",
+        file_url,
+      };
+      const { error } = await supabase.from("contact_submissions").insert(insertPayload);
+      if (error) throw new Error(error.message);
+
+      track("contact_submitted", { material: parsed.data.selected_filament, has_file: !!file_url });
+      supabase.functions.invoke("send-contact-notification", {
+        body: { ...parsed.data, file_url },
+      }).catch(() => {});
+      setDone(true);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      toast.error(msg);
+    } finally {
       setBusy(false);
-      return;
     }
-    track("contact_submitted", { material: parsed.data.selected_filament });
-    // Best-effort email notification (only works if function is deployed + env set)
-    supabase.functions.invoke("send-contact-notification", { body: parsed.data }).catch(() => {});
-    setDone(true);
-    setBusy(false);
   };
 
   if (done) {
@@ -68,8 +126,10 @@ const Contact = () => {
         <div className="size-14 rounded-full bg-accent text-primary flex items-center justify-center mx-auto mb-6">
           <CheckCircle2 className="size-7" />
         </div>
-        <h1 className="font-display text-3xl font-bold">Message received</h1>
-        <p className="mt-3 text-muted-foreground">We'll get back to you within 1–2 business days.</p>
+        <h1 className="font-display text-3xl font-bold">Thank you for your enquiry!</h1>
+        <p className="mt-3 text-muted-foreground">
+          We've received your project details and will get back to you shortly with a customized quote.
+        </p>
         <div className="mt-8 flex justify-center gap-3">
           <Button asChild variant="outline"><Link to="/selector">Try the selector</Link></Button>
           <Button asChild className="bg-gradient-primary"><Link to="/">Back to home</Link></Button>
@@ -119,6 +179,52 @@ const Contact = () => {
         <div>
           <Label>Message</Label>
           <Textarea rows={6} value={form.message} onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))} placeholder="Tell us about your part, batch size, and any constraints…" />
+        </div>
+
+        <div>
+          <Label>Attach project file (optional)</Label>
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={onDrop}
+            onClick={() => fileInputRef.current?.click()}
+            className={`mt-2 cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
+              dragOver ? "border-primary bg-accent/40" : "border-input hover:border-primary/50 hover:bg-accent/20"
+            }`}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              accept={ALLOWED_EXTENSIONS.map((e) => `.${e}`).join(",")}
+              onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
+            />
+            {file ? (
+              <div className="flex items-center justify-between gap-3 text-left">
+                <div className="flex items-center gap-3 min-w-0">
+                  <FileIcon className="size-5 shrink-0 text-primary" />
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium">{file.name}</div>
+                    <div className="text-xs text-muted-foreground">{formatBytes(file.size)}</div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                  className="rounded-full p-1 hover:bg-muted"
+                  aria-label="Remove file"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
+                <Upload className="size-6" />
+                <div><span className="font-medium text-foreground">Click to upload</span> or drag & drop</div>
+                <div className="text-xs">CAD, 3D models, PDFs, images — up to 15MB</div>
+              </div>
+            )}
+          </div>
         </div>
 
         <Button type="submit" disabled={busy} className="bg-gradient-primary">
