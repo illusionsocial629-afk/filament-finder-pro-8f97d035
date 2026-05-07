@@ -145,6 +145,11 @@ const Contact = () => {
       </div>
       <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight">Get in touch</h1>
       <p className="mt-3 text-muted-foreground">Tell us about your project. If you came from the selector, we've prefilled what we know.</p>
+      <div className="mt-4">
+        <Button asChild variant="outline" size="sm">
+          <a href="https://amorphousindia.com" target="_blank" rel="noopener noreferrer">← Back to amorphousindia.com</a>
+        </Button>
+      </div>
 
       <form onSubmit={submit} className="mt-10 space-y-5">
         <div className="grid md:grid-cols-2 gap-5">
