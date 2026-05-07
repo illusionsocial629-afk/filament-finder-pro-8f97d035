@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
 import { FloatingSelectorButton } from "./FloatingSelectorButton";
+import { FloatingBackToSiteButton } from "./FloatingBackToSiteButton";
 import { initTheme } from "./ThemeToggle";
 
 export const Layout = () => {
@@ -15,6 +16,7 @@ export const Layout = () => {
       </main>
       <Footer />
       <FloatingSelectorButton />
+      <FloatingBackToSiteButton />
     </div>
   );
 };
