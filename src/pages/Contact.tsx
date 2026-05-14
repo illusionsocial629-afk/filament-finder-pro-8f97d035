@@ -87,17 +87,17 @@ const submit = async (e: React.FormEvent) => {
 
   try {
     const res = await fetch(import.meta.env.VITE_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: form.name,
-        email: form.email,
-        message: form.message,
-        selected_filament: form.selected_filament,
-        use_case: form.use_case,
-      }),
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    name: form.name,
+    email: form.email,
+    message: form.message,
+    selected_filament: form.selected_filament,
+    use_case: form.use_case,
+  }),
     });
 
     const data = await res.json();
