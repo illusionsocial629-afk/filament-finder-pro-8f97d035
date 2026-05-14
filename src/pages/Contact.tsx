@@ -86,37 +86,19 @@ const submit = async (e: React.FormEvent) => {
   setBusy(true);
 
   try {
-    const formData = new FormData();
-
-    formData.append("name", parsed.data.name);
-    formData.append("email", parsed.data.email);
-    formData.append("message", parsed.data.message);
-
-    if (parsed.data.selected_filament) {
-      formData.append("selected_filament", parsed.data.selected_filament);
-    }
-
-    if (parsed.data.use_case) {
-      formData.append("use_case", parsed.data.use_case);
-    }
-
-    if (file) {
-      formData.append("file", file);
-    }
-
-  const res = await fetch(import.meta.env.VITE_API_URL, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
- body: JSON.stringify({
-  name: form.name,
-  email: form.email,
-  message: form.message,
-  selected_filament: form.selected_filament,
-  use_case: form.use_case,
-}),
-});
+    const res = await fetch(import.meta.env.VITE_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: form.name,
+        email: form.email,
+        message: form.message,
+        selected_filament: form.selected_filament,
+        use_case: form.use_case,
+      }),
+    });
 
     const data = await res.json();
 
@@ -124,10 +106,10 @@ const submit = async (e: React.FormEvent) => {
       toast.success("Message sent successfully!");
       setDone(true);
     } else {
-      toast.error("Failed to send message");
+      toast.error(data.error || "Failed to send message");
     }
   } catch (err: any) {
-    toast.error(err.message);
+    toast.error(err.message || "Something went wrong");
   }
 
   setBusy(false);
