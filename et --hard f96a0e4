@@ -1,0 +1,47 @@
+[33m8ae5d68[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m merge fix
+[33mf96a0e4[m first commit
+[33mb40c1ff[m Removed RatingBar imports
+[33mc44f307[m Changes
+[33md3140bc[m Fixed RatingBar import path
+[33mdfca9d0[m Changes
+[33m1d5c254[m Removed blog/admin, added CTA
+[33me55c796[m Changes
+[33mef07487[m Changes
+[33m5092cfa[m Changes
+[33ma4b4398[m Fixed RatingBar & Contact insert
+[33mf378ccb[m Changes
+[33m928152b[m Changes
+[33m5070dc0[m Built analytics & contact app
+[33md512ab4[m Changes
+[33me4ebcea[m Changes
+[33mc31b3bb[m Changes
+[33mc817dde[m Changes
+[33m3f9f0fc[m Changes
+[33m0a9f611[m Changes
+[33m8a04756[m Changes
+[33m054d93a[m Changes
+[33m4dbe96c[m Changes
+[33m56bde2f[m Changes
+[33m95c7010[m Changes
+[33mbd0e784[m Rename favicon.ico to favicon.iconfff
+[33m16c260c[m Update Footer.tsx
+[33m0ac7194[m Update Navbar.tsx
+[33ma7d0ff1[m Added color to 3D spool result
+[33m8fc8e3b[m Changes
+[33m2b9d19a[m Changes
+[33m5fd45db[m Replaced hero with 3D spool
+[33mf31a127[m Changes
+[33m983bb1d[m Changes
+[33m7c69c32[m Changes
+[33mb6ec160[m Built full Filora app
+[33m6e48920[m Changes
+[33m139b907[m Changes
+[33ma612088[m Changes
+[33md11bea7[m Changes
+[33m930adbb[m Changes
+[33m3526bea[m Changes
+[33mf6c5b0c[m Changes
+[33md461fa6[m Work in progress
+[33m40deefe[m Chose filament guide theme
+[33m1ddc5ee[m Work in progress
+[33maec0f38[m template: vite_react_shadcn_ts_2026-03-20
