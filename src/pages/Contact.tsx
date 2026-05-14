@@ -86,18 +86,23 @@ const submit = async (e: React.FormEvent) => {
   setBusy(true);
 
   try {
+    // ✅ FormData use karo
+    const formData = new FormData();
+
+    formData.append("name", form.name);
+    formData.append("email", form.email);
+    formData.append("message", form.message);
+    formData.append("selected_filament", form.selected_filament);
+    formData.append("use_case", form.use_case);
+
+    // ✅ file attach
+    if (file) {
+      formData.append("file", file);
+    }
+
     const res = await fetch(import.meta.env.VITE_API_URL, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    name: form.name,
-    email: form.email,
-    message: form.message,
-    selected_filament: form.selected_filament,
-    use_case: form.use_case,
-  }),
+      method: "POST",
+      body: formData,
     });
 
     const data = await res.json();
@@ -108,6 +113,7 @@ const submit = async (e: React.FormEvent) => {
     } else {
       toast.error(data.error || "Failed to send message");
     }
+
   } catch (err: any) {
     toast.error(err.message || "Something went wrong");
   }
