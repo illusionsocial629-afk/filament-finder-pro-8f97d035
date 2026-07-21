@@ -61,8 +61,8 @@ export const Navbar = () => {
 
         <div className="hidden md:flex items-center gap-2">
           <ThemeToggle />
-          <Button size="sm" onClick={() => navigate("/selector")} className="bg-gradient-primary hover:opacity-90 transition">
-            Start Selecting
+          <Button size="sm" onClick={() => navigate("/contact")} className="bg-gradient-primary hover:opacity-90 transition">
+           Get a quote
           </Button>
         </div>
 
